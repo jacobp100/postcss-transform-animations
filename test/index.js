@@ -1,10 +1,10 @@
-import { camelCase, constant } from 'lodash/fp';
+import { camelCase, upperCase, constant } from 'lodash/fp';
 import test from 'ava';
 import postcss from 'postcss';
 import transformClasses from '../src';
 
 
-test.serial('transforms class names', t => {
+test.serial('transforms animation names', t => {
   t.plan(1);
 
   return postcss([
@@ -12,27 +12,13 @@ test.serial('transforms class names', t => {
       transform: camelCase,
     }),
   ])
-    .process('.foo-bar {}')
+    .process('@keyframes foo-bar {}')
     .then(({ css }) => {
-      t.is(css, '.fooBar {}');
+      t.is(css, '@keyframes fooBar {}');
     });
 });
 
-test.serial('ignores other parts', t => {
-  t.plan(1);
-
-  return postcss([
-    transformClasses({
-      transform: camelCase,
-    }),
-  ])
-    .process('p.foo-bar:nth-child(2n + 1) {}')
-    .then(({ css }) => {
-      t.is(css, 'p.fooBar:nth-child(2n + 1) {}');
-    });
-});
-
-test.serial('throws by default for colliding class names', t => {
+test.serial('throws by default for colliding animation names', t => {
   t.plan(1);
 
   return postcss([
@@ -40,13 +26,13 @@ test.serial('throws by default for colliding class names', t => {
       transform: constant('fooBar'),
     }),
   ])
-    .process('.foo-bar {}, .fooBar {}')
+    .process('@keyframes foo-bar {} @keyframes fooBar {}')
     .catch(() => {
       t.pass();
     });
 });
 
-test.serial('does not throw for colliding class names if overridden', t => {
+test.serial('does not throw for colliding animation names if overridden', t => {
   t.plan(1);
 
   return postcss([
@@ -55,13 +41,13 @@ test.serial('does not throw for colliding class names if overridden', t => {
       allowConflicts: true,
     }),
   ])
-    .process('.foo-bar {}, .fooBar {}')
+    .process('@keyframes foo-bar {} @keyframes fooBar {}')
     .then(() => {
       t.pass();
     });
 });
 
-test.serial('does not throw for colliding class names if names are identical', t => {
+test.serial('does not throw for colliding animation names if names are identical', t => {
   t.plan(1);
 
   return postcss([
@@ -69,8 +55,106 @@ test.serial('does not throw for colliding class names if names are identical', t
       transform: camelCase,
     }),
   ])
-    .process('.foo-bar {}, .foo-bar {}')
+    .process('@keyframes foo-bar {} @keyframes foo-bar {}')
     .then(() => {
       t.pass();
+    });
+});
+
+test.serial('replaces references in animation-name declarations', t => {
+  t.plan(1);
+
+  return postcss([
+    transformClasses({
+      transform: camelCase,
+    }),
+  ])
+    .process('@keyframes foo-bar {} p { animation-name: foo-bar; }')
+    .then(({ css }) => {
+      t.is(css, '@keyframes fooBar {} p { animation-name: fooBar; }');
+    });
+});
+
+test.serial('does not replace keywords in animation-name declarations', t => {
+  t.plan(1);
+
+  return postcss([
+    transformClasses({
+      transform: upperCase,
+    }),
+  ])
+    .process('@keyframes none {} p { animation-name: none; }')
+    .then(({ css }) => {
+      t.is(css, '@keyframes NONE {} p { animation-name: none; }');
+    });
+});
+
+test.serial('replaces references in animation declarations', t => {
+  t.plan(1);
+
+  return postcss([
+    transformClasses({
+      transform: camelCase,
+    }),
+  ])
+    .process('@keyframes foo-bar {} p { animation: foo-bar; }')
+    .then(({ css }) => {
+      t.is(css, '@keyframes fooBar {} p { animation: fooBar; }');
+    });
+});
+
+test.serial('complies with spec on keywords in animation declarations', t => {
+  t.plan(1);
+
+  return postcss([
+    transformClasses({
+      transform: upperCase,
+    }),
+  ])
+    .process('@keyframes linear {} p { animation: linear linear; }')
+    .then(({ css }) => {
+      t.is(css, '@keyframes LINEAR {} p { animation: linear LINEAR; }');
+    });
+});
+
+test.serial('complies with spec on keywords in animation declarations', t => {
+  t.plan(1);
+
+  return postcss([
+    transformClasses({
+      transform: upperCase,
+    }),
+  ])
+    .process('@keyframes linear {} p { animation: linear ease-in linear infinite; }')
+    .then(({ css }) => {
+      t.is(css, '@keyframes LINEAR {} p { animation: linear ease-in LINEAR infinite; }');
+    });
+});
+
+test.serial('complies with spec on keywords in animation declarations', t => {
+  t.plan(1);
+
+  return postcss([
+    transformClasses({
+      transform: camelCase,
+    }),
+  ])
+    .process('@keyframes not-transformed {} p { animation: linear linear not-transformed; }')
+    .then(({ css }) => {
+      t.is(css, '@keyframes notTransformed {} p { animation: linear linear not-transformed; }');
+    });
+});
+
+test.serial('does not replace "none" in animation declarations', t => {
+  t.plan(1);
+
+  return postcss([
+    transformClasses({
+      transform: upperCase,
+    }),
+  ])
+    .process('@keyframes none {} p { animation: none none none; }')
+    .then(({ css }) => {
+      t.is(css, '@keyframes NONE {} p { animation: none none none; }');
     });
 });

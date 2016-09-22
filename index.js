@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.transformClassNames = undefined;
+exports.transformAnimationNames = undefined;
 
 var _fp = require('lodash/fp');
 
@@ -11,13 +11,62 @@ var _postcss = require('postcss');
 
 var _postcss2 = _interopRequireDefault(_postcss);
 
-var _postcssSelectorParser = require('postcss-selector-parser');
-
-var _postcssSelectorParser2 = _interopRequireDefault(_postcssSelectorParser);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var transformClassNames = exports.transformClassNames = function transformClassNames() {
+/* eslint-disable quote-props */
+/* eslint no-param-reassign: [0] */
+
+var initialRemainingKeywords = {
+  'alternate': 1,
+  'alternate-reverse': 1,
+  'backwards': 1,
+  'both': 1,
+  'ease': 1,
+  'ease-in': 1,
+  'ease-in-out': 1,
+  'ease-out': 1,
+  'forwards': 1,
+  'infinite': 1,
+  'linear': 1,
+  'none': Infinity, // No matter how many times you write none, it will never be an animation name
+  'normal': 1,
+  'paused': 1,
+  'reverse': 1,
+  'running': 1,
+  'step-end': 1,
+  'step-start': 1,
+  'initial': Infinity,
+  'inherit': Infinity,
+  'unset': Infinity
+};
+/* eslint-enable */
+
+var replaceAnimationNames = function replaceAnimationNames(originalValueToTransformed) {
+  return (0, _fp.reduce)(function (accum, value) {
+    var remainingKeywords = accum.remainingKeywords;
+    var didSetAnimationName = accum.didSetAnimationName;
+
+
+    var transformedValue = value;
+
+    if (!didSetAnimationName && value in remainingKeywords && remainingKeywords[value] > 0) {
+      accum.remainingKeywords = (0, _fp.update)(value, (0, _fp.add)(-1), remainingKeywords);
+    } else if (!didSetAnimationName) {
+      accum.didSetAnimationName = true;
+      transformedValue = (0, _fp.getOr)(value, [value], originalValueToTransformed);
+    }
+
+    accum.valueParts.push(transformedValue);
+
+    return accum;
+  }, {
+    didSetAnimationName: false,
+    remainingKeywords: initialRemainingKeywords,
+    valueParts: []
+  });
+};
+
+var transformAnimationNames = exports.transformAnimationNames = function transformAnimationNames() {
   var _ref = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
   var _ref$transform = _ref.transform;
@@ -28,32 +77,36 @@ var transformClassNames = exports.transformClassNames = function transformClassN
 
   var transformedToOriginalValue = {};
 
-  var transformClassNode = function transformClassNode(classNode) {
-    var value = classNode.value;
+  var transformKeyframeNode = function transformKeyframeNode(keyframeNode) {
+    var params = keyframeNode.params;
 
-    var transformedClassName = transform(value);
+    var transformedAnimationName = transform(params);
 
-    if (!allowConflicts && transformedClassName in transformedToOriginalValue && transformedToOriginalValue[transformedClassName] !== value) {
-      throw new Error('Expected ' + value + ' to produce a consistent result');
+    if (!allowConflicts && transformedAnimationName in transformedToOriginalValue && transformedToOriginalValue[transformedAnimationName] !== params) {
+      throw new Error('Expected ' + params + ' to produce a consistent result');
     }
 
-    transformedToOriginalValue[transformedClassName] = value;
-    classNode.value = transformedClassName;
+    transformedToOriginalValue[transformedAnimationName] = params;
+    keyframeNode.params = transformedAnimationName;
   };
 
-  var transformSelector = function transformSelector(selector) {
-    return (0, _postcssSelectorParser2.default)(function (node) {
-      node.walkClasses(transformClassNode);
-    }).process(selector).result;
-  };
+  root.walkAtRules(/keyframes$/, transformKeyframeNode);
 
-  root.walkRules(function (rule) {
-    rule.selectors = rule.selectors.map(transformSelector);
+  var originalValueToTransformed = (0, _fp.invert)(transformedToOriginalValue);
+
+  root.walkDecls(/animation-name$/, function (decl) {
+    if (decl.value !== 'none' && decl.value in originalValueToTransformed) {
+      decl.value = originalValueToTransformed[decl.value];
+    }
   });
-}; /* eslint no-param-reassign: [0] */
 
-exports.default = _postcss2.default.plugin('transform-classes', function (options) {
+  root.walkDecls(/animation$/, function (decl) {
+    decl.value = (0, _fp.flow)((0, _fp.split)(/\s+/), replaceAnimationNames(originalValueToTransformed), (0, _fp.get)('valueParts'), (0, _fp.join)(' '))(decl.value);
+  });
+};
+
+exports.default = _postcss2.default.plugin('transform-animations', function (options) {
   return function (root) {
-    return transformClassNames(options, root);
+    return transformAnimationNames(options, root);
   };
 });

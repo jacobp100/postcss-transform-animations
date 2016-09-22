@@ -1,5 +1,5 @@
 {
-  "name": "postcss-transform-classes",
+  "name": "postcss-transform-animations",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -9,15 +9,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jacobp100/postcss-transform-classes.git"
+    "url": "git+https://github.com/jacobp100/postcss-transform-animations.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/jacobp100/postcss-transform-classes/issues"
+    "url": "https://github.com/jacobp100/postcss-transform-animations/issues"
   },
-  "homepage": "https://github.com/jacobp100/postcss-transform-classes#readme",
+  "homepage": "https://github.com/jacobp100/postcss-transform-animations#readme",
   "devDependencies": {
     "ava": "^0.14.0",
     "babel": "^6.5.2",
@@ -29,8 +29,7 @@
   },
   "dependencies": {
     "lodash": "^4.12.0",
-    "postcss": "^5.0.21",
-    "postcss-selector-parser": "^2.0.0"
+    "postcss": "^5.0.21"
   },
   "ava": {
     "files": [
