@@ -1,14 +1,14 @@
 import { camelCase, upperCase, constant } from 'lodash/fp';
 import test from 'ava';
 import postcss from 'postcss';
-import transformClasses from '../src';
+import transformAnimations from '../src';
 
 
 test.serial('transforms animation names', t => {
   t.plan(1);
 
   return postcss([
-    transformClasses({
+    transformAnimations({
       transform: camelCase,
     }),
   ])
@@ -22,7 +22,7 @@ test.serial('throws by default for colliding animation names', t => {
   t.plan(1);
 
   return postcss([
-    transformClasses({
+    transformAnimations({
       transform: constant('fooBar'),
     }),
   ])
@@ -36,7 +36,7 @@ test.serial('does not throw for colliding animation names if overridden', t => {
   t.plan(1);
 
   return postcss([
-    transformClasses({
+    transformAnimations({
       transform: constant('fooBar'),
       allowConflicts: true,
     }),
@@ -51,7 +51,7 @@ test.serial('does not throw for colliding animation names if names are identical
   t.plan(1);
 
   return postcss([
-    transformClasses({
+    transformAnimations({
       transform: camelCase,
     }),
   ])
@@ -65,7 +65,7 @@ test.serial('replaces references in animation-name declarations', t => {
   t.plan(1);
 
   return postcss([
-    transformClasses({
+    transformAnimations({
       transform: camelCase,
     }),
   ])
@@ -79,7 +79,7 @@ test.serial('does not replace keywords in animation-name declarations', t => {
   t.plan(1);
 
   return postcss([
-    transformClasses({
+    transformAnimations({
       transform: upperCase,
     }),
   ])
@@ -93,7 +93,7 @@ test.serial('replaces references in animation declarations', t => {
   t.plan(1);
 
   return postcss([
-    transformClasses({
+    transformAnimations({
       transform: camelCase,
     }),
   ])
@@ -107,7 +107,7 @@ test.serial('complies with spec on keywords in animation declarations', t => {
   t.plan(1);
 
   return postcss([
-    transformClasses({
+    transformAnimations({
       transform: upperCase,
     }),
   ])
@@ -121,7 +121,7 @@ test.serial('complies with spec on keywords in animation declarations', t => {
   t.plan(1);
 
   return postcss([
-    transformClasses({
+    transformAnimations({
       transform: upperCase,
     }),
   ])
@@ -135,7 +135,7 @@ test.serial('complies with spec on keywords in animation declarations', t => {
   t.plan(1);
 
   return postcss([
-    transformClasses({
+    transformAnimations({
       transform: camelCase,
     }),
   ])
@@ -149,7 +149,7 @@ test.serial('does not replace "none" in animation declarations', t => {
   t.plan(1);
 
   return postcss([
-    transformClasses({
+    transformAnimations({
       transform: upperCase,
     }),
   ])
