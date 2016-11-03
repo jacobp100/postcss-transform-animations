@@ -41,19 +41,23 @@ var initialRemainingKeywords = {
 };
 /* eslint-enable */
 
+var validIdent = /^-?[_a-z][_a-z0-9-]*$/i;
+
 var replaceAnimationNames = function replaceAnimationNames(originalValueToTransformed) {
   return (0, _fp.reduce)(function (accum, value) {
-    var remainingKeywords = accum.remainingKeywords;
-    var didSetAnimationName = accum.didSetAnimationName;
+    var remainingKeywords = accum.remainingKeywords,
+        didSetAnimationName = accum.didSetAnimationName;
 
 
     var transformedValue = value;
 
-    if (!didSetAnimationName && value in remainingKeywords && remainingKeywords[value] > 0) {
-      accum.remainingKeywords = (0, _fp.update)(value, (0, _fp.add)(-1), remainingKeywords);
-    } else if (!didSetAnimationName) {
-      accum.didSetAnimationName = true;
-      transformedValue = (0, _fp.getOr)(value, [value], originalValueToTransformed);
+    if (!didSetAnimationName && validIdent.test(value)) {
+      if (value in remainingKeywords && remainingKeywords[value] > 0) {
+        accum.remainingKeywords = (0, _fp.update)(value, (0, _fp.add)(-1), remainingKeywords);
+      } else {
+        accum.didSetAnimationName = true;
+        transformedValue = (0, _fp.getOr)(value, [value], originalValueToTransformed);
+      }
     }
 
     accum.valueParts.push(transformedValue);
@@ -67,12 +71,12 @@ var replaceAnimationNames = function replaceAnimationNames(originalValueToTransf
 };
 
 var transformAnimationNames = exports.transformAnimationNames = function transformAnimationNames() {
-  var _ref = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+  var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+      _ref$transform = _ref.transform,
+      transform = _ref$transform === undefined ? _fp.identity : _ref$transform,
+      _ref$allowConflicts = _ref.allowConflicts,
+      allowConflicts = _ref$allowConflicts === undefined ? false : _ref$allowConflicts;
 
-  var _ref$transform = _ref.transform;
-  var transform = _ref$transform === undefined ? _fp.identity : _ref$transform;
-  var _ref$allowConflicts = _ref.allowConflicts;
-  var allowConflicts = _ref$allowConflicts === undefined ? false : _ref$allowConflicts;
   var root = arguments[1];
 
   var transformedToOriginalValue = {};

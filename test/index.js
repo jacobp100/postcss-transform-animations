@@ -158,3 +158,17 @@ test.serial('does not replace "none" in animation declarations', t => {
       t.is(css, '@keyframes NONE {} p { animation: none none none; }');
     });
 });
+
+test.serial('does not replace times in animation declarations', t => {
+  t.plan(1);
+
+  return postcss([
+    transformAnimations({
+      transform: upperCase,
+    }),
+  ])
+    .process('@keyframes test {} p { animation: 1s test; }')
+    .then(({ css }) => {
+      t.is(css, '@keyframes TEST {} p { animation: 1s TEST; }');
+    });
+});

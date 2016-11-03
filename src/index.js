@@ -30,16 +30,20 @@ const initialRemainingKeywords = {
 };
 /* eslint-enable */
 
+const validIdent = /^-?[_a-z][_a-z0-9-]*$/i;
+
 const replaceAnimationNames = originalValueToTransformed => reduce((accum, value) => {
   const { remainingKeywords, didSetAnimationName } = accum;
 
   let transformedValue = value;
 
-  if (!didSetAnimationName && value in remainingKeywords && remainingKeywords[value] > 0) {
-    accum.remainingKeywords = update(value, add(-1), remainingKeywords);
-  } else if (!didSetAnimationName) {
-    accum.didSetAnimationName = true;
-    transformedValue = getOr(value, [value], originalValueToTransformed);
+  if (!didSetAnimationName && validIdent.test(value)) {
+    if (value in remainingKeywords && remainingKeywords[value] > 0) {
+      accum.remainingKeywords = update(value, add(-1), remainingKeywords);
+    } else {
+      accum.didSetAnimationName = true;
+      transformedValue = getOr(value, [value], originalValueToTransformed);
+    }
   }
 
   accum.valueParts.push(transformedValue);
