@@ -3,7 +3,9 @@
 import postcss from 'postcss';
 import transformAnimationNames from './transformAnimationNames';
 
-module.exports = postcss.plugin(
+export { transformAnimationNames };
+
+export default postcss.plugin(
   'transform-animations',
   (options) => (root) => transformAnimationNames(options, root)
 );
